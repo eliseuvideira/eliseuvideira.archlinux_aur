@@ -1,6 +1,27 @@
 ---
 - name: Install Packages
   block:
+    - name: Upgrade Packages
+      block:
+        - name: Check Updates
+          shell: |
+            #!/bin/sh
+            /usr/bin/paru -Qu | wc -l
+          register: archlinux_aur__check_updates
+          changed_when: false
+          notify: Update Packages
+
+        - set_fact:
+            archlinux_aur__should_upgrade: archlinux_aur__check_updates.stdout != "0"
+
+        - name: Upgrade Packages
+          shell: |
+            #!/bin/sh
+            paru -Syu --noconfirm
+          when: archlinux_aur__should_upgrade == true
+
+      when: archlinux_aur__upgrade == true
+
     - name: Check Missing Packages
       shell: |
         #!/bin/bash
